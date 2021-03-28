@@ -3,34 +3,62 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 
-class Square extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            value: null,
-        };
-    }
+function Square(props) {
     
-    render() {
-      return (
+    return (
         <button 
         className="square"
-        onClick={() => {alert('click');}}>
-          {this.props.value}
+        onClick={ props.onClick }>
+          {props.value}
         </button>
       );
     }
-  }
   
   class Board extends React.Component {
 
+    constructor(props) {
+      super(props);
+      this.state = {
+          squares: Array(9).fill(null),
+          xIsNext: true,
+      };
+    }
+
+    handleClick(i) {
+      // 기존 배열을 수정하지 않고 squares 배열의 복사본을 생성하여 수정한다.
+      // slice() 메서드는 어떤 배열의 begin 부터 end 까지에 대한 얕은 복사본을 새로운 배열로 리턴
+      const squares = this.state.squares.slice();
+
+      if (calculateWinner(squares) || squares[i]) {
+        return;
+      }
+      
+      squares[i] = this.state.xIsNext ? 'X' : 'O';
+      this.setState({
+        squares: squares,
+        xIsNext: !this.state.xIsNext,
+      });
+    }
+
+
     renderSquare(i) {
-      return <Square value={i}/>;
+      return (
+      <Square 
+        value={this.state.squares[i]}
+        onClick={() => this.handleClick(i)}/>
+      );
     }
   
     render() {
-      const status = 'Next player: X';
+      // const status = 'Next player: ' + this.state.xIsNext ? 'X' : 'O';
   
+      const winner = calculateWinner(this.state.squares);
+      let status;
+      if (winner) {
+        status = 'Winner: ' + winner;
+      } else {
+        status = 'Next Plyaer: ' + (this.state.xIsNext ? 'X' : 'O');
+      }
       return (
         <div>
           <div className="status">{status}</div>
@@ -55,6 +83,16 @@ class Square extends React.Component {
   }
   
   class Game extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = {
+        history: [{
+          squares: Array(9).fill(null),
+        }],
+        xIsNext: true,
+      }
+    }
+
     render() {
       return (
         <div className="game">
@@ -71,7 +109,29 @@ class Square extends React.Component {
   }
   
   // ========================================
-  
+
+  function calculateWinner(squares) {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+        return squares[a];
+      }
+    }
+    return null;
+  }
+
+
+
   ReactDOM.render(
     <Game />,
     document.getElementById('root')
